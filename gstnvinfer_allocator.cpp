@@ -97,6 +97,10 @@ gst_nvinfer_allocator_alloc (GstAllocator * allocator, gsize size,
     return nullptr;
   }
 
+// The wsl2 version of the cuda library does not contain the EGL symbols,
+// and NVBUF_MEM_SURFACE_ARRAY is reserved for Jetson devices
+// so we can safely exclude these when compiling/linking for WSL2.
+#ifndef ENABLE_WSL2
   if(tmem->surf->memType == NVBUF_MEM_SURFACE_ARRAY) {
     if (NvBufSurfaceMapEglImage (tmem->surf, -1) != 0) {
       GST_ERROR ("Error: Could not map EglImage from NvBufSurface for nvinfer");
@@ -106,10 +110,16 @@ gst_nvinfer_allocator_alloc (GstAllocator * allocator, gsize size,
     tmem->egl_frames.resize (inferallocator->batch_size);
     tmem->cuda_resources.resize (inferallocator->batch_size);
   }
+#endif  
 
   tmem->frame_memory_ptrs.assign (inferallocator->batch_size, nullptr);
 
   for (guint i = 0; i < inferallocator->batch_size; i++) {
+
+// The wsl2 version of the cuda library does not contain the EGL symbols,
+// and NVBUF_MEM_SURFACE_ARRAY is reserved for Jetson devices
+// so we can safely exclude these when compiling/linking for WSL2.
+#ifndef ENABLE_WSL2
     if(tmem->surf->memType == NVBUF_MEM_SURFACE_ARRAY) {
       if (cuGraphicsEGLRegisterImage (&tmem->cuda_resources[i],
               tmem->surf->surfaceList[i].mappedAddr.eglImage,
@@ -125,7 +135,9 @@ gst_nvinfer_allocator_alloc (GstAllocator * allocator, gsize size,
       }
       tmem->frame_memory_ptrs[i] = (char *) tmem->egl_frames[i].frame.pPitch[0];
     }
-    else {
+    else 
+#endif    
+    {
       /* Calculate pointers to individual frame memories in the batch memory and
       * insert in the vector. */
       tmem->frame_memory_ptrs[i] = (char *) tmem->surf->surfaceList[i].dataPtr;
