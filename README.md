@@ -2,6 +2,8 @@
 # nVidia DeepStream on WSL2: nvdsgst_infer plugin adjustments
 
 
+(see https://github.com/sylvain-prevost/deepstream_wsl for similar example tested with Deepstream 6.2) 
+
 
 nvdsgst_infer plugin adjustments to further augment Deepstream support (debugging/execution) under WSL2 when the host possess an nVidia dGPU.
 See  nVidia driver 511.79 release note for list of compatible devices (https://developer.nvidia.com/cuda/wsl).
